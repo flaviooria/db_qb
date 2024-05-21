@@ -2,7 +2,7 @@
 name = "db-query-builder"
 version = "0.1.0"
 description = ""
-authors = ["Flavio Oria <flavio.oria@zetaverse.es>"]
+authors = ["Flavio Oria <flavio.oriap@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
