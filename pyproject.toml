@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "db-query-builder"
+version = "0.1.0"
+description = ""
+authors = ["Flavio Oria <flavio.oria@zetaverse.es>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.7.1"
+sqlmodel = "^0.0.18"
+pydantic-settings = "^2.2.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
