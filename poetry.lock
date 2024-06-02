@@ -12,6 +12,16 @@ files = [
 ]
 
 [[package]]
+name = "assertpy"
+version = "1.1"
+description = "Simple assertion library for unit testing in python with a fluent API"
+optional = false
+python-versions = "*"
+files = [
+    {file = "assertpy-1.1.tar.gz", hash = "sha256:acc64329934ad71a3221de185517a43af33e373bb44dc05b5a9b174394ef4833"},
+]
+
+[[package]]
 name = "greenlet"
 version = "3.0.3"
 description = "Lightweight in-process concurrent programming"
@@ -526,4 +536,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "89d3410c0c3268d6d50524b9dc630718a10f78cda5c08ef97e4ca1afc3ab83a0"
+content-hash = "210e6cd35cda763a00daeeb9d133b6d77275def99200ab53a2d3ede67c269d69"
