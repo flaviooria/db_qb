@@ -1,9 +1,10 @@
 from enum import Enum
+from typing import Optional
 
-from pydantic import Field, computed_field, field_validator, StringConstraints
+from pydantic import Field, StringConstraints, computed_field, field_validator
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing_extensions import ClassVar, Annotated
+from typing_extensions import Annotated, ClassVar
 
 
 class DatabaseTypes(str, Enum):
@@ -26,13 +27,15 @@ class Settings(BaseSettings):
     DB_USERNAME: str
     DB_PASSWORD: str
     DB_PORT: int = Field(default=5432)
-    DB_URI: str
-    DB_SCHEME: str = Field(..., description='Driver de motor de base de datos', examples=['psycopg2'])
+    DB_URI: Optional[str] = None
+    DB_SCHEME: str = Field(..., description='Driver de motor de base de datos', examples=[
+                           'psycopg2'])
     DB_MOTOR: MotorString = Field(
         ..., description='Motor de base de datos', examples=['postgres', 'myqsl', 'mariadb'])  # type ignore
 
     # ClassVar se utiliza para indicar que es un atributo privado o mejor dicho de clase
-    _allowed_schemes: ClassVar[str] = ['psycopg2', 'psycopg', 'pg8000', 'asyncpg', 'psycopg2cffi']
+    _allowed_schemes: ClassVar[str] = ['psycopg2',
+                                       'psycopg', 'pg8000', 'asyncpg', 'psycopg2cffi']
 
     _db_motors: ClassVar[str] = ['postgres', 'myqsl', 'mariadb']
 
@@ -41,7 +44,8 @@ class Settings(BaseSettings):
     def verify_scheme(cls, value: str):
         if isinstance(value, str):
             if value not in cls._allowed_schemes:
-                raise ValueError(f'Driver de base de datos no se encuentra en: {str(cls._allowed_schemes)}')
+                raise ValueError(
+                    f'Driver de base de datos no se encuentra en: {str(cls._allowed_schemes)}')
             return value
 
     @field_validator('DB_MOTOR')
@@ -49,7 +53,8 @@ class Settings(BaseSettings):
     def verify_db_motor(cls, value: str):
         if isinstance(value, str):
             if value not in cls._db_motors:
-                raise ValueError(f'Motor de base de datos no se encuentra en: {str(cls._db_motors)} ')
+                raise ValueError(
+                    f'Motor de base de datos no se encuentra en: {str(cls._db_motors)} ')
             return value
 
     @computed_field
@@ -74,7 +79,8 @@ class Settings(BaseSettings):
                                   password=self.DB_PASSWORD, port=self.DB_PORT, path=self.DB_NAME).unicode_string()
 
     # Añadimos soporte de Dotenv -> https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support
-    model_config = SettingsConfigDict(env_file='../.env', env_file_encoding='utf-8', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file='../.env', env_file_encoding='utf-8', extra='ignore')
 
     # extra indica que nuestro ficher .env puede tener claves que no necesariamente esten declarada en esta clase
 
