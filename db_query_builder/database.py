@@ -93,7 +93,7 @@ def init_db(module: types.ModuleType):
         # Crea todas las tablas registradas
         SQLModel.metadata.create_all(engine)
     except Exception as ex:
-        print('El errro viene de aquí => ', ex)
+        print('El error viene de aquí => ', ex)
 
 
 __all__ = ["init_db", "engine"]
