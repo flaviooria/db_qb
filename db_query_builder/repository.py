@@ -237,7 +237,7 @@ class RepositoryBase(Generic[_T]):
 
         result = self.__execute(self.__query)
 
-        return True if result.rowcount == 1 else False
+        return bool(result.rowcount)
 
     def delete(self, where: Union[Dict[str, Any], str], operators: Optional[List[str]] = None) -> bool:
 
@@ -268,7 +268,7 @@ class RepositoryBase(Generic[_T]):
 
         result = self.__execute(self.__query)
 
-        return True if result.rowcount == 1 else False
+        return bool(result.rowcount)
 
     def to_model(self) -> Optional[_T]:
         if self.__query != "":
