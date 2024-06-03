@@ -167,24 +167,6 @@ class RepositoryBase(Generic[_T]):
             # TODO: luego tendre que lanzar mi propia excepción custom
             raise Exception('Property model not implemented')
 
-        # if isinstance(conditions, str):
-        #     _where = conditions
-        #
-        # if isinstance(conditions, dict):
-        #
-        #     for index, (field, value) in enumerate(conditions.items()):
-        #         separator = ' and '
-        #         _where += f"{field} = "
-        #
-        #         if operators is not None:
-        #             if index < len(operators):
-        #                 separator = f' {operators[index]} '
-        #
-        #         if index == len(conditions.values()) - 1:
-        #             separator = ' '
-        #
-        #         _where += self.get_value_formated(value, separator)
-
         _where = self.__get_where_conditions(where, operators)
 
         _sql = f"select {self.__fields} from {self.model.__tablename__} where {_where};"
@@ -215,20 +197,6 @@ class RepositoryBase(Generic[_T]):
 
                 _set += self.__get_value_formated(value, separator)
 
-        # if isinstance(where, dict):
-        #     for index, (field, value) in enumerate(where.items()):
-        #         separator = ' and '
-        #         _where += f"{field} = "
-        #
-        #         if operators is not None:
-        #             if index < len(operators):
-        #                 separator = f' {operators[index]} '
-        #
-        #         if index == len(where.values()) - 1:
-        #             separator = ' '
-        #
-        #         _where += self.get_value_formated(value, separator)
-
         _where = self.__get_where_conditions(where, operators)
 
         _sql = f"update {self.model.__tablename__} set {_set} where {_where};"
@@ -242,23 +210,6 @@ class RepositoryBase(Generic[_T]):
     def delete(self, where: Union[Dict[str, Any], str], operators: Optional[List[str]] = None) -> bool:
 
         _where = ''
-
-        # if isinstance(where, str):
-        #     _where = where
-        #
-        # if isinstance(where, dict):
-        #     for index, (field, value) in enumerate(where.items()):
-        #         separator = ' and '
-        #         _where += f"{field} = "
-        #
-        #         if operators is not None:
-        #             if index < len(operators):
-        #                 separator = f' {operators[index]} '
-        #
-        #         if index == len(where.values()) - 1:
-        #             separator = ' '
-        #
-        #         _where += self.get_value_formated(value, separator)
 
         _where = self.__get_where_conditions(where, operators)
 
