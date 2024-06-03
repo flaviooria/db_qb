@@ -42,6 +42,8 @@ class RepositoryBase(Generic[_T]):
             new_value = f"{value}{separator}"
         if isinstance(value, datetime):
             new_value = f"'{value.isoformat()}'{separator}"
+        if value is None:
+            new_value = f"'null'{separator}"
 
         return new_value
 
