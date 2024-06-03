@@ -203,7 +203,7 @@ class RepositoryBase(Generic[_T]):
             raise Exception('Property model not implemented')
 
         if isinstance(set_fields, str):
-            _set = str
+            _set = set_fields
 
         if isinstance(set_fields, dict):
             for index, (field, value) in enumerate(set_fields.items()):
