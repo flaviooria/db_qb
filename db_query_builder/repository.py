@@ -109,7 +109,7 @@ class RepositoryBase(Generic[_T]):
 
         return self
 
-    def create(self, model: Type[_T], /) -> _T:
+    def insert(self, model: Type[_T], /) -> _T:
         model_dict: dict = model.model_dump()
 
         _columns = ', '.join(model_dict.keys())

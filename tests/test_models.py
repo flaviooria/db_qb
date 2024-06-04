@@ -35,7 +35,7 @@ class TestUserRepository(unittest.TestCase):
     def test_create_user(self):
         user = UserSchema(name='test', email='test@dev', password='test')
         user_to_create = User.model_validate(user)
-        user_created = self.userRepository.create(user_to_create)
+        user_created = self.userRepository.insert(user_to_create)
 
         assert_that(user_to_create).is_same_as(user_created)
 
