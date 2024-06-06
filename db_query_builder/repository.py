@@ -1,5 +1,6 @@
+import functools
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Callable
 
 import pandas as pd
 from sqlalchemy import Connection, text
@@ -28,6 +29,15 @@ class RepositoryBase(Generic[_T]):
         self.__model: Optional[Type[_T]] = None
         self.__fields = "*"
         self.__query = ""
+
+    @staticmethod
+    def transaction(func: Callable[..., Any]):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            with engine.begin() as connection:
+                return func(self, connection, *args, **kwargs)
+
+        return wrapper
 
     @classmethod
     def __get_value_formated(cls, value: str, separator: str):
@@ -138,6 +148,13 @@ class RepositoryBase(Generic[_T]):
             self.__connection.close()
 
         return model
+
+    @transaction
+    def insert_all(self, connection: Optional[Connection], *, models: List[Type[_T]]) -> bool:
+        models = [{**data.model_dump()} for data in models]
+        result = connection.execute(self.model.__table__.insert(), models)
+
+        return bool(result.rowcount)
 
     def get_all(self, modelo: Optional[Type[_T]] = None) -> Optional[List[_T]]:
 
