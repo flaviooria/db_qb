@@ -1,6 +1,6 @@
 import unittest
 
-from assertpy import assert_that, add_extension, fail
+from assertpy import add_extension, assert_that, fail
 
 import tests.domain.models as models
 from db_query_builder import InitConnection
@@ -39,6 +39,17 @@ class TestUserRepository(unittest.TestCase):
 
         assert_that(user_to_create).is_same_as(user_created)
 
+    def test_insert_all(self):
+
+        user = UserSchema(name='test', email='test@dev', password='test')
+        user2 = UserSchema(name='test2', email='tes2t@dev', password='test2')
+        user_to_create = User.model_validate(user)
+        user_to_create2 = User.model_validate(user2)
+        is_insert_all_users = self.userRepository.insert_all(
+            models=[user_to_create, user_to_create2])
+
+        assert_that(is_insert_all_users).is_true()
+
     def test_list_users_is_not_empty(self):
         users = self.userRepository.get_all()
 
@@ -74,7 +85,8 @@ class TestUserRepository(unittest.TestCase):
         assert_that(user).is_instance_of(dict)
 
     def test_validate_if_user_is_updated(self):
-        is_user_updated = self.userRepository.update({'email': None}, "id = '64653a59-ac2f-4386-a41a-f891bc5ae5cd'")
+        is_user_updated = self.userRepository.update(
+            {'email': None}, "id = '64653a59-ac2f-4386-a41a-f891bc5ae5cd'")
 
         assert_that(is_user_updated).is_true()
 
@@ -86,7 +98,8 @@ class TestUserRepository(unittest.TestCase):
     # Failed tests
     def test_validate_if_user_is_not_none_failure(self):
         try:
-            user_none = self.userRepository.get_one(where={'id': '1'}).to_model()
+            user_none = self.userRepository.get_one(
+                where={'id': '1'}).to_model()
 
             assert_that(user_none).is_not_none()
             fail("should have a raise error")
@@ -100,7 +113,8 @@ class TestUserRepository(unittest.TestCase):
             assert_that(user).is_instance_of(User)
             fail("shoul have a raise error")
         except AssertionError as ex:
-            assert_that(str(ex)).contains("to be instance of class <User>, but was not")
+            assert_that(str(ex)).contains(
+                "to be instance of class <User>, but was not")
 
     def test_validate_if_user_instance_of_dict_failure(self):
         try:
@@ -109,11 +123,13 @@ class TestUserRepository(unittest.TestCase):
             assert_that(user).is_instance_of(dict)
             fail("shoul have a raise error")
         except AssertionError as ex:
-            assert_that(str(ex)).contains("to be instance of class <dict>, but was not")
+            assert_that(str(ex)).contains(
+                "to be instance of class <dict>, but was not")
 
     def test_validate_if_field_exist_in_model_failure(self):
         try:
-            user = self.userRepository.get_one(where={'name': 'User'}).to_dict()
+            user = self.userRepository.get_one(
+                where={'name': 'User'}).to_dict()
 
             assert_that([user]).extracting('first_name').contains(['User'])
             fail("should have a raise error")
@@ -122,7 +138,8 @@ class TestUserRepository(unittest.TestCase):
 
     def test_validate_if_user_is_updated_failure(self):
         try:
-            is_user_updated = self.userRepository.update(set_fields={'name': 'Carlos'}, where="id = '1'")
+            is_user_updated = self.userRepository.update(
+                set_fields={'name': 'Carlos'}, where="id = '1'")
 
             assert_that(is_user_updated).is_true()
             fail("should have a raise error")
@@ -131,7 +148,7 @@ class TestUserRepository(unittest.TestCase):
 
     def test_validate_if_user_is_deleted_failure(self):
         try:
-            is_user_deleted = self.userRepository.delete(where=f"id = '1'")
+            is_user_deleted = self.userRepository.delete(where="id = '1'")
 
             assert_that(is_user_deleted).is_true()
             fail("should have a raise error")
