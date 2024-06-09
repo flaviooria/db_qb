@@ -1,16 +1,22 @@
 import functools
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Callable
+from typing import (Any, Callable, Dict, List, Optional, Type,
+                    TypeVar, Union)
 
+import time
 import pandas as pd
-from sqlalchemy import Connection, text
+import sqlalchemy.sql
+from pandas import DataFrame
+from sqlalchemy import Connection, CursorResult, text
 from sqlalchemy.exc import OperationalError
 from sqlmodel import SQLModel
+from typing_extensions import Annotated, Literal
 from typing_extensions import Generic
 
 from db_query_builder.database import engine as engine
 
 _T = TypeVar(name='_T', bound=SQLModel)
+TypeMode = Annotated[str, Literal['sql', 'as_pd']]
 
 
 class RepositoryBase(Generic[_T]):
@@ -22,7 +28,6 @@ class RepositoryBase(Generic[_T]):
                 raise Exception('Engine not could None')
 
             self.__engine = engine
-            self.__connection = self.__get_connection()
         except Exception as ex:
             print('Aquí el error', ex)
 
@@ -53,7 +58,7 @@ class RepositoryBase(Generic[_T]):
         if isinstance(value, datetime):
             new_value = f"'{value.isoformat()}'{separator}"
         if value is None:
-            new_value = f"'null'{separator}"
+            new_value = f"{sqlalchemy.sql.null()}{separator}"
 
         return new_value
 
@@ -102,16 +107,25 @@ class RepositoryBase(Generic[_T]):
             raise Exception(
                 f"Error de conexión a la base de datos: {e}") from e
 
-    def __execute(self, statement: str):
+    @transaction
+    def __execute(self, connection: Optional[Connection], /, statement: str | Type[_T],
+                  parameters: List[Type[_T]] | Dict[str, Any] | None = None, *,
+                  mode: TypeMode = 'sql') -> \
+            DataFrame | CursorResult[Any]:
         try:
 
-            result = self.__connection.execute(text(statement))
-            self.__connection.commit()
+            if mode != 'sql' and mode != 'as_pd':
+                raise Exception('Mode read uin method not is \'sql\' or \'as_pd\'')
 
-            return result
+            if mode == 'as_pd':
+                return pd.read_sql_query(text(statement), connection)
+
+            if parameters is not None:
+                return connection.execute(statement.__table__.insert(), parameters)
+
+            return connection.execute(text(statement))
 
         except Exception as ex:
-            self.__connection.rollback()
             print('Error => ', ex)
 
     def fields(self, fields: str) -> 'RepositoryBase[_T]':
@@ -119,7 +133,7 @@ class RepositoryBase(Generic[_T]):
 
         return self
 
-    def insert(self, model: Type[_T], /) -> _T:
+    def insert(self, model: Type[_T]) -> _T:
         model_dict: dict = model.model_dump()
 
         _columns = ', '.join(model_dict.keys())
@@ -137,29 +151,27 @@ class RepositoryBase(Generic[_T]):
         _sql = f"insert into {model.__tablename__} ({_columns}) values ({_values});"
 
         try:
-
-            self.__connection.execute(text(_sql))
-            self.__connection.commit()
-
+            self.__execute(_sql)
+            return model
         except Exception as ex:
-            self.__connection.rollback()
+            # TODO: crear mi propia excepción
             print('Error => ', ex)
-        finally:
-            self.__connection.close()
 
-        return model
+    def insert_all(self, *, models: List[Type[_T]]) -> bool:
+        try:
 
-    @transaction
-    def insert_all(self, connection: Optional[Connection], *, models: List[Type[_T]]) -> bool:
-        models = [{**data.model_dump()} for data in models]
-        result = connection.execute(self.model.__table__.insert(), models)
+            models = [{**data.model_dump()} for data in models]
+            result = self.__execute(self.model, models)
 
-        return bool(result.rowcount)
+            return bool(result.rowcount)
+        except Exception as ex:
+            # TODO: crear mi propia excepción
+            print('Error => ', ex)
 
-    def get_all(self, modelo: Optional[Type[_T]] = None) -> Optional[List[_T]]:
+    def get_all(self, model: Optional[Type[_T]] = None) -> Optional[List[_T]]:
 
-        if modelo is not None:
-            self.model = modelo
+        if model is not None:
+            self.model = model
 
         if self.model is None:
             raise Exception('Property model not implemented')
@@ -167,7 +179,7 @@ class RepositoryBase(Generic[_T]):
         _sql = f"select * from {self.model.__tablename__}"
 
         generic_models: List[Type[_T]] = []
-        models_from_db = pd.read_sql_query(_sql, self.__connection)
+        models_from_db = self.__execute(_sql, mode='as_pd')
 
         list_model = models_from_db.to_dict('records')
 
@@ -218,9 +230,7 @@ class RepositoryBase(Generic[_T]):
 
         _sql = f"update {self.model.__tablename__} set {_set} where {_where};"
 
-        self.__query = _sql
-
-        result = self.__execute(self.__query)
+        result = self.__execute(_sql)
 
         return bool(result.rowcount)
 
@@ -232,15 +242,13 @@ class RepositoryBase(Generic[_T]):
 
         _sql = f"delete from {self.model.__tablename__} where {_where}"
 
-        self.__query = _sql
-
-        result = self.__execute(self.__query)
+        result = self.__execute(_sql)
 
         return bool(result.rowcount)
 
     def to_model(self) -> Optional[_T]:
         if self.__query != "":
-            model_founded = pd.read_sql_query(self.__query, self.__connection)
+            model_founded = self.__execute(self.__query, mode='as_pd')
 
             if model_founded.empty:
                 return None
@@ -252,7 +260,7 @@ class RepositoryBase(Generic[_T]):
 
     def to_dict(self) -> Optional[Dict[str, Any]]:
         if self.__query != "":
-            model_founded = pd.read_sql_query(self.__query, self.__connection)
+            model_founded = self.__execute(self.__query, mode='as_pd')
 
             if model_founded.empty:
                 return None
@@ -263,7 +271,7 @@ class RepositoryBase(Generic[_T]):
         return None
 
 
-class Repository(RepositoryBase[_T], Generic[_T]):
+class Repository(RepositoryBase[_T]):
 
     def __init__(self, model: Type[_T], /, **kwargs) -> None:
         super().__init__(**kwargs)
