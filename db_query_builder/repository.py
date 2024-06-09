@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import (Any, Callable, Dict, List, Optional, Type,
                     TypeVar, Union)
 
-import time
 import pandas as pd
 import sqlalchemy.sql
 from pandas import DataFrame
