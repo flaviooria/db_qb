@@ -159,6 +159,11 @@ class TestUserRepository(unittest.TestCase):
         except Exception as ex:
             assert_that(str(ex)).contains('Expected <True>, but was not.')
 
+    def test_field_exist_in_user_failure(self):
+        user = self.userRepository.fields("name").get_data().to_dict()
+
+        assert_that(user).does_not_contain('email')
+
 
 if __name__ == '__main__':
     unittest.main()
