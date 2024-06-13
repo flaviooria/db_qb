@@ -17,6 +17,29 @@ _T = TypeVar(name='_T', bound=SQLModel)
 TypeMode = Annotated[str, Literal['sql', 'as_pd']]
 
 
+class DotDict(dict):
+    """
+    class to map the data in dictionary and access it through the dot
+    """
+
+    def __init__(self, **kwargs):
+        """
+
+        :param kwargs: Dictionary spread to update data in the class
+        """
+        super().__init__()
+        self.__dict__.update(kwargs)
+
+    def __getattr__(self, key):
+        if key not in self.__dict__:
+            raise AttributeError(f'Column {key} not exist in fields')
+
+        return self[key]
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
 class RepositoryBase(Generic[_T]):
 
     def __init__(self, **kwargs) -> None:
@@ -261,7 +284,7 @@ class RepositoryBase(Generic[_T]):
             return self.model(**model)
         return None
 
-    def to_dict(self) -> Optional[Dict[str, Any]]:
+    def to_dict(self) -> Optional[DotDict]:
         if self.__query != "":
             model_founded = self.__execute(self.__query, mode='as_pd')
 
@@ -270,7 +293,7 @@ class RepositoryBase(Generic[_T]):
 
             model = model_founded.to_dict('records')[0]
 
-            return model
+            return DotDict(**model)
         return None
 
 
