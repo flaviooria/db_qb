@@ -5,14 +5,13 @@ from typing import (Any, Callable, Dict, List, Optional, Type,
 
 import pandas as pd
 import sqlalchemy.sql
+from db_query_builder.database import engine as engine
 from pandas import DataFrame
 from sqlalchemy import Connection, CursorResult, text
 from sqlalchemy.exc import OperationalError
 from sqlmodel import SQLModel
 from typing_extensions import Annotated, Literal
 from typing_extensions import Generic
-
-from db_query_builder.database import engine as engine
 
 _T = TypeVar(name='_T', bound=SQLModel)
 TypeMode = Annotated[str, Literal['sql', 'as_pd']]
@@ -166,6 +165,11 @@ class RepositoryBase(Generic[_T]):
         except Exception as ex:
             # TODO: crear mi propia excepción
             print('Error => ', ex)
+
+    def get_data(self) -> 'RepositoryBase[_T]':
+        self.__query = f"select {self.__fields} from {self.model.__tablename__}"
+
+        return self
 
     def get_all(self, model: Optional[Type[_T]] = None) -> Optional[List[_T]]:
 
