@@ -2,7 +2,7 @@ import unittest
 
 import tests.domain.models as models
 from assertpy import add_extension, assert_that, fail
-from db_query_builder import InitConnection
+from raw_dbmodel import InitConnection
 from tests.domain import User
 from tests.domain.schema import UserSchema
 from tests.respositories.user_respository import UserRepository

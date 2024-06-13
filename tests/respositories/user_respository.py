@@ -1,6 +1,6 @@
 from typing import Type
 
-from db_query_builder import Repository
+from raw_dbmodel import Repository
 from tests.domain import User
 
 

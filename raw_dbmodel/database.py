@@ -7,7 +7,7 @@ import types
 from sqlalchemy import Engine, inspect
 from sqlmodel import SQLModel, create_engine
 
-from db_query_builder.settings import config
+from raw_dbmodel.settings import config
 
 engine: Engine = create_engine(config.uri, echo=False)
 

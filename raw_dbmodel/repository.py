@@ -5,7 +5,7 @@ from typing import (Any, Callable, Dict, List, Optional, Type,
 
 import pandas as pd
 import sqlalchemy.sql
-from db_query_builder.database import engine as engine
+from raw_dbmodel.database import engine as engine
 from pandas import DataFrame
 from sqlalchemy import Connection, CursorResult, text
 from sqlalchemy.exc import OperationalError
