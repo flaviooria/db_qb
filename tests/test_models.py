@@ -1,8 +1,7 @@
 import unittest
 
-from assertpy import add_extension, assert_that, fail
-
 import tests.domain.models as models
+from assertpy import add_extension, assert_that, fail
 from db_query_builder import InitConnection
 from tests.domain import User
 from tests.domain.schema import UserSchema
@@ -54,6 +53,11 @@ class TestUserRepository(unittest.TestCase):
         users = self.userRepository.get_all()
 
         assert_that(users).is_not_empty()
+
+    def test_field_exist_in_user_model(self):
+        user = self.userRepository.fields("name").get_data().to_dict()
+
+        assert_that(user).contains('name')
 
     def test_validate_user_is_not_none(self):
         user = self.userRepository.get_one(where={'name': 'User'}).to_model()
