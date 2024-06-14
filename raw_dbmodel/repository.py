@@ -23,22 +23,21 @@ class DotDict(dict):
     class to map the data in dictionary and access it through the dot
     """
 
-    def __init__(self, **kwargs):
-        """
-
-        :param kwargs: Dictionary spread to update data in the class
-        """
-        super().__init__()
-        self.__dict__.update(kwargs)
-
     def __getattr__(self, key):
-        if key not in self.__dict__:
-            raise AttributeError(f'Column {key} not exist in fields')
 
-        return self[key]
+        try:
+            return self[key]
+        except Exception:
+            raise AttributeError(f"'Object has no attribute '{key}'")
 
     def __setattr__(self, key, value):
         self[key] = value
+
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError:
+            raise AttributeError(f"'Object has no attribute '{key}'")
 
 
 class RepositoryBase(Generic[_T]):
@@ -321,7 +320,7 @@ class RepositoryBase(Generic[_T]):
 
             model = model_founded.to_dict('records')[0]
 
-            return DotDict(**model)
+            return DotDict(model)
         return None
 
 
