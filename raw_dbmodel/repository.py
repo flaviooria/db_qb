@@ -5,11 +5,12 @@ from typing import (Any, Callable, Dict, List, Optional, Type,
 
 import pandas as pd
 import sqlalchemy.sql
-from raw_dbmodel.database import engine as engine
 from pandas import DataFrame
+from raw_dbmodel.database import engine as engine
 from sqlalchemy import Connection, CursorResult, text
 from sqlalchemy.exc import OperationalError
 from sqlmodel import SQLModel
+from sqlmodel import inspect
 from typing_extensions import Annotated, Literal
 from typing_extensions import Generic
 
@@ -142,7 +143,7 @@ class RepositoryBase(Generic[_T]):
                 return pd.read_sql_query(text(statement), connection)
 
             if parameters is not None:
-                return connection.execute(statement.__table__.insert(), parameters)
+                return connection.execute(statement, parameters)
 
             return connection.execute(text(statement))
 
@@ -154,8 +155,18 @@ class RepositoryBase(Generic[_T]):
 
         return self
 
-    def insert(self, model: Type[_T]) -> _T:
+    def insert(self, model: Type[_T], *, auto_increment: bool = True) -> _T:
         model_dict: dict = model.model_dump()
+
+        if not auto_increment:
+            table = inspect(self.model).tables[0]
+            columns_key = [column.name for column in table.primary_key.columns]
+
+            for field_key in columns_key:
+                for data in model_dict.keys():
+                    if field_key == data:
+                        model_dict.pop(field_key)
+                        break
 
         _columns = ', '.join(model_dict.keys())
         _values = ''
@@ -178,11 +189,28 @@ class RepositoryBase(Generic[_T]):
             # TODO: crear mi propia excepción
             print('Error => ', ex)
 
-    def insert_all(self, *, models: List[Type[_T]]) -> bool:
+    def insert_all(self, *, models: List[Type[_T]], auto_increment: bool = True) -> bool:
         try:
 
             models = [{**data.model_dump()} for data in models]
-            result = self.__execute(self.model, models)
+            _sql = self.model.__table__.insert()
+
+            if not auto_increment:
+                table = inspect(self.model).tables[0]
+                columns_key = [column.name for column in table.primary_key.columns]
+
+                for field_key in columns_key:
+                    for model in models:
+                        if field_key in model.keys():
+                            model.pop(field_key)
+                            continue
+
+                _columns = ', '.join(models[0].keys())
+                _values = ', '.join(f":{key}" for key in models[0].keys())
+
+                _sql = f"insert into {self.model.__tablename__} ({_columns}) values ({_values})"
+
+            result = self.__execute(_sql, models)
 
             return bool(result.rowcount)
         except Exception as ex:
