@@ -98,7 +98,7 @@ def init_db(module: types.ModuleType):
         print('El error viene de aquí => ', ex)
 
 
-def creat_tables(models: List[Type]):
+def create_tables(models: List[Type]):
     tables: list[Type[SQLModel]] = []
     for _cls in models:
         if isinstance(_cls, type):
@@ -118,7 +118,7 @@ def creat_tables(models: List[Type]):
         print('Could not create the tables, check that the imported classes are correct.')
 
 
-__all__ = ["init_db", "engine", "creat_tables"]
+__all__ = ["init_db", "engine", "create_tables"]
 
 
 def __dir__() -> list[str]:
