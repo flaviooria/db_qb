@@ -98,9 +98,9 @@ def init_db(module: types.ModuleType):
         print('El error viene de aquí => ', ex)
 
 
-def creat_tables(classes: List[Type]):
+def creat_tables(models: List[Type]):
     tables: list[Type[SQLModel]] = []
-    for _cls in classes:
+    for _cls in models:
         if isinstance(_cls, type):
             try:
                 if issubclass(_cls, SQLModel) and _cls is not SQLModel and hasattr(_cls, '__table__'):
