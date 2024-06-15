@@ -1,8 +1,9 @@
+import random
 import unittest
 
-import tests.domain.models as models
 from assertpy import add_extension, assert_that, fail
-from raw_dbmodel import InitConnection
+
+from raw_dbmodel import create_tables
 from tests.domain import User
 from tests.domain.schema import UserSchema
 from tests.respositories.user_respository import UserRepository
@@ -26,26 +27,41 @@ class TestUserRepository(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        InitConnection(models)
+        create_tables([User])
 
     def setUp(self):
         self.userRepository = UserRepository()
+        self._id: int | None = None
 
     def test_create_user(self):
         user = UserSchema(name='test', email='test@dev', password='test')
+        user2 = UserSchema(name='test_flavio', email='test_flavio@dev', password='test')
         user_to_create = User.model_validate(user)
+        user_to_create2 = User.model_validate(user2)
         user_created = self.userRepository.insert(user_to_create)
+        user_created2 = self.userRepository.insert(user_to_create2)
 
         assert_that(user_to_create).is_same_as(user_created)
+        assert_that(user_to_create2).is_same_as(user_created2)
 
     def test_insert_all(self):
 
-        user = UserSchema(name='test', email='test@dev', password='test')
-        user2 = UserSchema(name='test2', email='tes2t@dev', password='test2')
-        user_to_create = User.model_validate(user)
-        user_to_create2 = User.model_validate(user2)
+        users = []
+        ids = []
+        for _ in range(10):
+            _id = random.randrange(1, 1000, 1)
+
+            while _id in ids:
+                _id = random.randrange(1, 100, 1)
+
+            user = UserSchema(name=f'test{_id}', email=f'test{_id}@dev', password='test')
+            user_to_create = User.model_validate(user)
+            users.append(user_to_create)
+            ids.append(_id)
+
+        self._id = ids[-1]
         is_insert_all_users = self.userRepository.insert_all(
-            models=[user_to_create, user_to_create2])
+            models=users)
 
         assert_that(is_insert_all_users).is_true()
 
@@ -60,42 +76,42 @@ class TestUserRepository(unittest.TestCase):
         assert_that(user).contains('name')
 
     def test_validate_user_is_not_none(self):
-        user = self.userRepository.get_one(where={'name': 'User'}).to_model()
+        user = self.userRepository.get_one(where={'name': 'test'}).to_model()
 
         assert_that(user).is_not_none()
 
     def test_validate_that_user_is_instance_user_model(self):
-        user = self.userRepository.get_one(where={'name': 'User'}).to_model()
+        user = self.userRepository.get_one(where={'name': 'test'}).to_model()
 
         assert_that(user).is_instance_of(User)
 
     def test_validate_field_exists_in_user(self):
-        user = self.userRepository.get_one(where={'name': 'User'}).to_model()
+        user = self.userRepository.get_one(where={'name': 'test'}).to_model()
 
         users = [user.model_dump()]
 
         # Evaluamos la listas de users, para ver si la formación existe
-        assert_that(users).extracting('name').contains('User')
-        assert_that(users).extracting('name').is_equal_to(['User'])
+        assert_that(users).extracting('name').contains('test')
+        assert_that(users).extracting('name').is_equal_to(['test'])
 
         # Usamos el has_atributo de la clase
-        assert_that(user).has_name('User')
+        assert_that(user).has_name('test')
         # Usamos nuestra propia función para evaluar el test
         assert_that(user).exist_field_in_model('name')
 
     def test_validate_if_user_is_type_dict(self):
-        user = self.userRepository.get_one(where={'name': 'User'}).to_dict()
+        user = self.userRepository.get_one(where={'name': 'test'}).to_dict()
 
         assert_that(user).is_instance_of(dict)
 
     def test_validate_if_user_is_updated(self):
         is_user_updated = self.userRepository.update(
-            {'email': None}, "id = '64653a59-ac2f-4386-a41a-f891bc5ae5cd'")
+            {'email': None}, "name = 'test'")
 
         assert_that(is_user_updated).is_true()
 
     def test_validate_if_user_is_deleted(self):
-        is_user_deleted = self.userRepository.delete({'email': 'test@dev'})
+        is_user_deleted = self.userRepository.delete({'name': 'test_flavio'})
 
         assert_that(is_user_deleted).is_true()
 
@@ -112,7 +128,7 @@ class TestUserRepository(unittest.TestCase):
 
     def test_validate_if_user_instance_of_model_failure(self):
         try:
-            user = self.userRepository.get_one(where={'id': 'User'}).to_model()
+            user = self.userRepository.get_one(where={'id': 'test'}).to_model()
 
             assert_that(user).is_instance_of(User)
             fail("shoul have a raise error")
@@ -133,7 +149,7 @@ class TestUserRepository(unittest.TestCase):
     def test_validate_if_field_exist_in_model_failure(self):
         try:
             user = self.userRepository.get_one(
-                where={'name': 'User'}).to_dict()
+                where={'name': 'test'}).to_dict()
 
             assert_that([user]).extracting('first_name').contains(['User'])
             fail("should have a raise error")
