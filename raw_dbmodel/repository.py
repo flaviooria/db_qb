@@ -1,7 +1,8 @@
 import functools
+from abc import abstractmethod, ABC
 from datetime import datetime
 from typing import (Any, Callable, Dict, List, Optional, Type,
-                    TypeVar, Union)
+                    TypeVar, Union, )
 
 import pandas as pd
 import sqlalchemy.sql
@@ -40,9 +41,16 @@ class DotDict(dict):
             raise AttributeError(f"'Object has no attribute '{key}'")
 
 
-class RepositoryBase(Generic[_T]):
+class RepositoryAbstract(ABC):
+    @property
+    @abstractmethod
+    def model(self) -> Generic[_T]:
+        pass
 
-    def __init__(self, **kwargs) -> None:
+
+class RepositoryBase(Generic[_T], RepositoryAbstract):
+
+    def __init__(self) -> None:
 
         try:
             if engine is None:
@@ -325,11 +333,4 @@ class RepositoryBase(Generic[_T]):
 
 
 class Repository(RepositoryBase[_T]):
-
-    def __init__(self, model: Type[_T], /, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._model = model
-
-    @property
-    def model(self) -> Type[_T]:
-        return self._model
+    pass
