@@ -2,6 +2,7 @@ import random
 import unittest
 
 from assertpy import add_extension, assert_that, fail
+from pandas import DataFrame
 from raw_dbmodel import create_tables
 from tests.domain import User
 from tests.domain.schema import UserSchema
@@ -116,6 +117,26 @@ class TestUserRepository(unittest.TestCase):
 
         assert_that(is_user_deleted).is_true()
 
+    def test_validate_if_data_is_a_df(self):
+        is_user_an_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+        assert_that(is_user_an_df).is_instance_of(DataFrame)
+
+    def test_validate_if_data_contains_value(self):
+        user_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+        assert_that(user_df.to_dict('records')[0]['name']).contains('test')
+
+    def test_validate_if_user_df_is_not_none(self):
+        user_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+        assert_that(user_df).is_not_none()
+
+    def test_validate_if_data_df_is_none(self):
+        user_df = self.userRepository.get_one(where={'name': '1'}).as_df()
+
+        assert_that(user_df).is_none()
+
     # Failed tests
     def test_validate_if_user_is_not_none_failure(self):
         try:
@@ -177,9 +198,30 @@ class TestUserRepository(unittest.TestCase):
             assert_that(str(ex)).contains('Expected <True>, but was not.')
 
     def test_field_exist_in_user_failure(self):
-        user = self.userRepository.fields("name").get_data().as_dict()
+        try:
+            user = self.userRepository.fields("name").get_data().as_dict()
 
-        assert_that(user).does_not_contain('email')
+            assert_that(user).contains_key('email')
+        except Exception as ex:
+            assert_that(str(ex)).contains("Expected <{'name': 'test592'}> to contain key <email>, but did not")
+
+    def test_validate_if_data_contains_value_failure(self):
+        try:
+            user_df = self.userRepository.fields('email').get_one(where={'name': 'test'}).as_df()
+
+            assert_that(user_df.to_dict('records')[0]).contains_key('name')
+            fail("Should have a raise error")
+        except Exception as ex:
+            assert_that(str(ex)).contains("Expected <{'email': None}> to contain key <name>, but did not.")
+
+    def test_validate_if_user_df_is_none_failure(self):
+        try:
+            user_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+            assert_that(user_df.to_dict('records')[0]).is_none()
+            fail("Should have a raise error")
+        except Exception as ex:
+            assert_that(str(ex)).contains("to be <None>")
 
 
 if __name__ == '__main__':
