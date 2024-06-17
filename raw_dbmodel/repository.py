@@ -324,6 +324,17 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
             return DotDict(model)
         return None
 
+    def as_df(self) -> Optional[DataFrame]:
+        if self.__query != "":
+            model_founded = self.__execute(self.__query, mode='as_pd')
+
+            if model_founded.empty:
+                return None
+
+            return model_founded
+
+        return None
+
 
 class Repository(RepositoryBase[_T]):
     pass
