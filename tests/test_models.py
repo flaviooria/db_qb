@@ -2,7 +2,6 @@ import random
 import unittest
 
 from assertpy import add_extension, assert_that, fail
-
 from raw_dbmodel import create_tables
 from tests.domain import User
 from tests.domain.schema import UserSchema

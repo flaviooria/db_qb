@@ -1,20 +1,21 @@
 import functools
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import (Any, Callable, Dict, List, Optional, Type, TypeAlias,
+                    TypeVar, Union)
 
 import pandas as pd
 import sqlalchemy.sql
 from pandas import DataFrame
+from raw_dbmodel.database import engine as engine
 from sqlalchemy import Connection, CursorResult, text
-from sqlalchemy.exc import OperationalError
 from sqlmodel import SQLModel, inspect
 from typing_extensions import Annotated, Generic, Literal
 
-from raw_dbmodel.database import engine as engine
-
 _T = TypeVar(name='_T', bound=SQLModel)
 TypeMode = Annotated[str, Literal['sql', 'as_pd']]
+DictOrStr: TypeAlias = Union[Dict[str, Any], str]
+ListStrOrNone: TypeAlias = Optional[List[str]]
 
 
 class DotDict(dict):
@@ -63,7 +64,7 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         self.__query = ""
 
     @staticmethod
-    def transaction(func: Callable[..., Any]):
+    def transaction(func: Callable[..., Union[DataFrame, CursorResult[Any]]]):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
             with engine.begin() as connection:
@@ -90,8 +91,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         return new_value
 
     @classmethod
-    def __get_where_conditions(cls, where: Union[Dict[str, Any], str],
-                               operators: Optional[List[str]] = None):
+    def __get_where_conditions(cls, where: DictOrStr,
+                               operators: ListStrOrNone = None):
 
         if isinstance(where, str):
             return where
@@ -126,17 +127,9 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
     def model(self, value: Type[_T]):
         self.__model = value
 
-    def __get_connection(self) -> Connection:
-        try:
-            return self.__engine.connect()
-        except OperationalError as e:
-            # TODO: luego tendre que lanzar mi propia excepción custom
-            raise Exception(
-                f"Error de conexión a la base de datos: {e}") from e
-
     @transaction
-    def __execute(self, connection: Optional[Connection], /, statement: str | Type[_T],
-                  parameters: List[Type[_T]] | Dict[str, Any] | None = None, *,
+    def __execute(self, connection: Optional[Connection], /, statement: Union[str, Type[_T]],
+                  parameters: Optional[Union[List[Type[_T]], Dict[str, Any]]] = None, *,
                   mode: TypeMode = 'sql') -> \
             DataFrame | CursorResult[Any]:
         try:
@@ -161,10 +154,10 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
         return self
 
-    def insert(self, model: Type[_T], *, auto_increment: bool = True) -> _T:
+    def insert(self, model: Type[_T], *, have_autoincrement_default: bool = True) -> _T:
         model_dict: dict = model.model_dump()
 
-        if not auto_increment:
+        if not have_autoincrement_default:
             table = inspect(self.model).tables[0]
             columns_key = [column.name for column in table.primary_key.columns]
 
@@ -195,13 +188,13 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
             # TODO: crear mi propia excepción
             print('Error => ', ex)
 
-    def insert_all(self, *, models: List[Type[_T]], auto_increment: bool = True) -> bool:
+    def insert_all(self, *, models: List[Type[_T]], have_autoincrement_default: bool = True) -> bool:
         try:
 
             models = [{**data.model_dump()} for data in models]
             _sql = self.model.__table__.insert()
 
-            if not auto_increment:
+            if not have_autoincrement_default:
                 table = inspect(self.model).tables[0]
                 columns_key = [
                     column.name for column in table.primary_key.columns]
@@ -250,8 +243,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
         return generic_models
 
-    def get_one(self, where: Union[Dict[str, Any], str],
-                operators: Optional[List[str]] = None) -> 'RepositoryBase[_T]':
+    def get_one(self, where: DictOrStr,
+                operators: ListStrOrNone = None) -> 'RepositoryBase[_T]':
 
         if self.model is None:
             # TODO: luego tendre que lanzar mi propia excepción custom
@@ -265,8 +258,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
         return self
 
-    def update(self, set_fields: Union[Dict[str, Any], str], where: Union[Dict[str, Any], str],
-               operators: Optional[List[str]] = None) -> bool:
+    def update(self, set_fields: DictOrStr, where: DictOrStr,
+               operators: ListStrOrNone = None) -> bool:
         _set = ''
         _where = ''
 
@@ -295,7 +288,7 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
         return bool(result.rowcount)
 
-    def delete(self, where: Union[Dict[str, Any], str], operators: Optional[List[str]] = None) -> bool:
+    def delete(self, where: DictOrStr, operators: ListStrOrNone = None) -> bool:
 
         _where = ''
 
