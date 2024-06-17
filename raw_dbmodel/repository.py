@@ -1,19 +1,17 @@
 import functools
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import (Any, Callable, Dict, List, Optional, Type,
-                    TypeVar, Union, )
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 
 import pandas as pd
 import sqlalchemy.sql
 from pandas import DataFrame
-from raw_dbmodel.database import engine as engine
 from sqlalchemy import Connection, CursorResult, text
 from sqlalchemy.exc import OperationalError
-from sqlmodel import SQLModel
-from sqlmodel import inspect
-from typing_extensions import Annotated, Literal
-from typing_extensions import Generic
+from sqlmodel import SQLModel, inspect
+from typing_extensions import Annotated, Generic, Literal
+
+from raw_dbmodel.database import engine as engine
 
 _T = TypeVar(name='_T', bound=SQLModel)
 TypeMode = Annotated[str, Literal['sql', 'as_pd']]
@@ -144,7 +142,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         try:
 
             if mode != 'sql' and mode != 'as_pd':
-                raise Exception('Mode read uin method not is \'sql\' or \'as_pd\'')
+                raise Exception(
+                    'Mode read uin method not is \'sql\' or \'as_pd\'')
 
             if mode == 'as_pd':
                 return pd.read_sql_query(text(statement), connection)
@@ -204,7 +203,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
             if not auto_increment:
                 table = inspect(self.model).tables[0]
-                columns_key = [column.name for column in table.primary_key.columns]
+                columns_key = [
+                    column.name for column in table.primary_key.columns]
 
                 for field_key in columns_key:
                     for model in models:
@@ -307,7 +307,7 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
         return bool(result.rowcount)
 
-    def to_model(self) -> Optional[_T]:
+    def as_model(self) -> Optional[_T]:
         if self.__query != "":
             model_founded = self.__execute(self.__query, mode='as_pd')
 
@@ -319,7 +319,7 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
             return self.model(**model)
         return None
 
-    def to_dict(self) -> Optional[DotDict]:
+    def as_dict(self) -> Optional[DotDict]:
         if self.__query != "":
             model_founded = self.__execute(self.__query, mode='as_pd')
 

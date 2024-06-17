@@ -35,7 +35,8 @@ class TestUserRepository(unittest.TestCase):
 
     def test_create_user(self):
         user = UserSchema(name='test', email='test@dev', password='test')
-        user2 = UserSchema(name='test_flavio', email='test_flavio@dev', password='test')
+        user2 = UserSchema(name='test_flavio',
+                           email='test_flavio@dev', password='test')
         user_to_create = User.model_validate(user)
         user_to_create2 = User.model_validate(user2)
         user_created = self.userRepository.insert(user_to_create)
@@ -54,7 +55,8 @@ class TestUserRepository(unittest.TestCase):
             while _id in ids:
                 _id = random.randrange(1, 100, 1)
 
-            user = UserSchema(name=f'test{_id}', email=f'test{_id}@dev', password='test')
+            user = UserSchema(
+                name=f'test{_id}', email=f'test{_id}@dev', password='test')
             user_to_create = User.model_validate(user)
             users.append(user_to_create)
             ids.append(_id)
@@ -71,22 +73,22 @@ class TestUserRepository(unittest.TestCase):
         assert_that(users).is_not_empty()
 
     def test_field_exist_in_user_model(self):
-        user = self.userRepository.fields("name").get_data().to_dict()
+        user = self.userRepository.fields("name").get_data().as_dict()
 
         assert_that(user).contains('name')
 
     def test_validate_user_is_not_none(self):
-        user = self.userRepository.get_one(where={'name': 'test'}).to_model()
+        user = self.userRepository.get_one(where={'name': 'test'}).as_model()
 
         assert_that(user).is_not_none()
 
     def test_validate_that_user_is_instance_user_model(self):
-        user = self.userRepository.get_one(where={'name': 'test'}).to_model()
+        user = self.userRepository.get_one(where={'name': 'test'}).as_model()
 
         assert_that(user).is_instance_of(User)
 
     def test_validate_field_exists_in_user(self):
-        user = self.userRepository.get_one(where={'name': 'test'}).to_model()
+        user = self.userRepository.get_one(where={'name': 'test'}).as_model()
 
         users = [user.model_dump()]
 
@@ -100,7 +102,7 @@ class TestUserRepository(unittest.TestCase):
         assert_that(user).exist_field_in_model('name')
 
     def test_validate_if_user_is_type_dict(self):
-        user = self.userRepository.get_one(where={'name': 'test'}).to_dict()
+        user = self.userRepository.get_one(where={'name': 'test'}).as_dict()
 
         assert_that(user).is_instance_of(dict)
 
@@ -119,7 +121,7 @@ class TestUserRepository(unittest.TestCase):
     def test_validate_if_user_is_not_none_failure(self):
         try:
             user_none = self.userRepository.get_one(
-                where={'id': '1'}).to_model()
+                where={'id': '1'}).as_model()
 
             assert_that(user_none).is_not_none()
             fail("should have a raise error")
@@ -128,7 +130,7 @@ class TestUserRepository(unittest.TestCase):
 
     def test_validate_if_user_instance_of_model_failure(self):
         try:
-            user = self.userRepository.get_one(where={'id': 'test'}).to_model()
+            user = self.userRepository.get_one(where={'id': 'test'}).as_model()
 
             assert_that(user).is_instance_of(User)
             fail("shoul have a raise error")
@@ -138,7 +140,7 @@ class TestUserRepository(unittest.TestCase):
 
     def test_validate_if_user_instance_of_dict_failure(self):
         try:
-            user = self.userRepository.get_one(where={'id': 'User'}).to_dict()
+            user = self.userRepository.get_one(where={'id': 'User'}).as_dict()
 
             assert_that(user).is_instance_of(dict)
             fail("shoul have a raise error")
@@ -149,7 +151,7 @@ class TestUserRepository(unittest.TestCase):
     def test_validate_if_field_exist_in_model_failure(self):
         try:
             user = self.userRepository.get_one(
-                where={'name': 'test'}).to_dict()
+                where={'name': 'test'}).as_dict()
 
             assert_that([user]).extracting('first_name').contains(['User'])
             fail("should have a raise error")
@@ -176,7 +178,7 @@ class TestUserRepository(unittest.TestCase):
             assert_that(str(ex)).contains('Expected <True>, but was not.')
 
     def test_field_exist_in_user_failure(self):
-        user = self.userRepository.fields("name").get_data().to_dict()
+        user = self.userRepository.fields("name").get_data().as_dict()
 
         assert_that(user).does_not_contain('email')
 
