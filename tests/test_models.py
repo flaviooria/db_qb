@@ -2,6 +2,7 @@ import random
 import unittest
 
 from assertpy import add_extension, assert_that, fail
+from pandas import DataFrame
 from raw_dbmodel import create_tables
 from tests.domain import User
 from tests.domain.schema import UserSchema
@@ -115,6 +116,26 @@ class TestUserRepository(unittest.TestCase):
         is_user_deleted = self.userRepository.delete({'name': 'test_flavio'})
 
         assert_that(is_user_deleted).is_true()
+
+    def test_validate_if_data_is_a_df(self):
+        is_user_an_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+        assert_that(is_user_an_df).is_instance_of(DataFrame)
+
+    def test_validate_if_data_contains_value(self):
+        user_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+        assert_that(user_df.to_dict('records')[0]['name']).contains('test')
+
+    def test_validate_if_user_df_is_not_none(self):
+        user_df = self.userRepository.get_one(where={'name': 'test'}).as_df()
+
+        assert_that(user_df).is_not_none()
+
+    def test_validate_if_data_df_is_none(self):
+        user_df = self.userRepository.get_one(where={'name': '1'}).as_df()
+
+        assert_that(user_df).is_none()
 
     # Failed tests
     def test_validate_if_user_is_not_none_failure(self):
