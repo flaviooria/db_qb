@@ -4,6 +4,7 @@ from sqlalchemy import Engine
 from sqlmodel import SQLModel, create_engine
 from typing_extensions import Type
 
+from raw_dbmodel.logger import logger
 from raw_dbmodel.settings import config
 
 engine: Engine = create_engine(config.uri, echo=False)
@@ -17,16 +18,18 @@ def create_tables(models: List[Type]):
                 if issubclass(_cls, SQLModel) and _cls is not SQLModel and hasattr(_cls, '__table__'):
                     tables.append(_cls)
                 else:
-                    print(f"{_cls.__name__} class is not a table")
+                    logger.warning(f'{_cls.__name__} class is not a table')
             except TypeError as te:
-                print(te)
+                logger.error(te)
 
     if len(tables) > 0:
-        print_tables = [f"{cls.__name__} class has been added as table name: {cls.__tablename__}" for cls in tables]
-        print(*print_tables, sep='\n')
+        print_tables = [f'{cls.__name__} class has been added as table name: {cls.__tablename__}' for cls in tables]
+        for msg in print_tables:
+            logger.info(msg)
+
         SQLModel.metadata.create_all(bind=engine, tables=[cls.__table__ for cls in tables if hasattr(cls, '__table__')])
     else:
-        print('Could not create the tables, check that the imported classes are correct.')
+        logger.error('Could not create the tables, check that the imported classes are correct.')
 
 
 __all__ = ["engine", "create_tables"]
