@@ -46,8 +46,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
                 raise Exception('Engine not could None')
 
             self.__engine = engine
-        except Exception as ex:
-            print('Aquí el error', ex)
+        except Exception:
+            raise
 
         self.__model: Optional[Type[_T]] = None
         self.__fields = "*"
@@ -152,8 +152,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
             columns_key = [column.name for column in table.primary_key.columns]
 
             for field_key in columns_key:
-                for data in model_dict.keys():
-                    if field_key == data:
+                for key in model_dict.keys():
+                    if field_key == key:
                         model_dict.pop(field_key)
                         break
 
@@ -162,12 +162,12 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         field_values = model_dict.values()
 
         for index, value in enumerate(field_values):
-            coma = ', '
+            separator = ', '
 
             if index == len(field_values) - 1:
-                coma = ' '
+                separator = ' '
 
-            _values += self.__get_value_formated(value, coma)
+            _values += self.__get_value_formated(value, separator)
 
         _sql = f"insert into {model.__tablename__} ({_columns}) values ({_values});"
 
@@ -290,36 +290,36 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
     def as_model(self) -> Optional[_T]:
         if self.__query != "":
-            model_founded = self.__execute(self.__query, mode='as_pd')
+            model_found = self.__execute(self.__query, mode='as_pd')
 
-            if model_founded.empty:
+            if model_found.empty:
                 return None
 
-            model = model_founded.to_dict('records')[0]
+            model = model_found.to_dict('records')[0]
 
             return self.model(**model)
         return None
 
     def as_dict(self) -> Optional[DotDict]:
         if self.__query != "":
-            model_founded = self.__execute(self.__query, mode='as_pd')
+            model_found = self.__execute(self.__query, mode='as_pd')
 
-            if model_founded.empty:
+            if model_found.empty:
                 return None
 
-            model = model_founded.to_dict('records')[0]
+            model = model_found.to_dict('records')[0]
 
             return DotDict(model)
         return None
 
     def as_df(self) -> Optional[DataFrame]:
         if self.__query != "":
-            model_founded = self.__execute(self.__query, mode='as_pd')
+            model_found = self.__execute(self.__query, mode='as_pd')
 
-            if model_founded.empty:
+            if model_found.empty:
                 return None
 
-            return model_founded
+            return model_found
 
         return None
 
