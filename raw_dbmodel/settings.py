@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     DB_MOTOR: MotorString = Field(
         ..., description='Database engine', examples=['postgres', 'myqsl', 'mariadb'])
 
-    # ClassVar se utiliza para indicar que es un atributo privado o mejor dicho de clase
     _allowed_schemes: ClassVar[str] = ['psycopg2',
                                        'psycopg', 'pg8000', 'asyncpg', 'psycopg2cffi']
 
@@ -76,11 +75,8 @@ class Settings(BaseSettings):
                                   username=self.DB_USERNAME,
                                   password=self.DB_PASSWORD, port=self.DB_PORT, path=self.DB_NAME).unicode_string()
 
-    # Añadimos soporte de Dotenv -> https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support
     model_config = SettingsConfigDict(
         env_file='../.env', env_file_encoding='utf-8', extra='ignore')
-
-    # extra indica que nuestro ficher .env puede tener claves que no necesariamente esten declarada en esta clase
 
 
 config = Settings()
