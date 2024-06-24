@@ -7,10 +7,12 @@ from typing import (Any, Callable, Dict, List, Optional, Type, TypeAlias,
 import pandas as pd
 import sqlalchemy.sql
 from pandas import DataFrame
-from raw_dbmodel.database import engine as engine
 from sqlalchemy import Connection, CursorResult, text
 from sqlmodel import SQLModel, inspect
 from typing_extensions import Annotated, Generic, Literal
+
+from exceptions import ModeOperatorError
+from raw_dbmodel.database import engine as engine
 
 _T = TypeVar(name='_T', bound=SQLModel)
 TypeMode = Annotated[str, Literal['sql', 'as_pd']]
@@ -27,7 +29,7 @@ class DotDict(dict):
 
         try:
             return self[key]
-        except Exception:
+        except KeyError:
             raise AttributeError(f"'Object has no attribute '{key}'")
 
     def __setattr__(self, key, value):
@@ -135,8 +137,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         try:
 
             if mode != 'sql' and mode != 'as_pd':
-                raise Exception(
-                    'Mode read uin method not is \'sql\' or \'as_pd\'')
+                raise ModeOperatorError(
+                    'Mode not is \'sql\' or \'as_pd\'')
 
             if mode == 'as_pd':
                 return pd.read_sql_query(text(statement), connection)
@@ -146,8 +148,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
 
             return connection.execute(text(statement))
 
-        except Exception as ex:
-            print('Error => ', ex)
+        except Exception:
+            raise
 
     def fields(self, fields: str) -> 'RepositoryBase[_T]':
         self.__fields = fields
@@ -184,9 +186,10 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         try:
             self.__execute(_sql)
             return model
-        except Exception as ex:
-            # TODO: crear mi propia excepción
-            print('Error => ', ex)
+        except ModeOperatorError:
+            raise
+        except Exception:
+            raise
 
     def insert_all(self, *, models: List[Type[_T]], have_autoincrement_default: bool = True) -> bool:
         try:
@@ -213,9 +216,8 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
             result = self.__execute(_sql, models)
 
             return bool(result.rowcount)
-        except Exception as ex:
-            # TODO: crear mi propia excepción
-            print('Error => ', ex)
+        except Exception:
+            raise
 
     def get_data(self) -> 'RepositoryBase[_T]':
         self.__query = f"select {self.__fields} from {self.model.__tablename__}"
@@ -247,8 +249,7 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
                 operators: ListStrOrNone = None) -> 'RepositoryBase[_T]':
 
         if self.model is None:
-            # TODO: luego tendre que lanzar mi propia excepción custom
-            raise Exception('Property model not implemented')
+            raise NotImplementedError('Property model not implemented')
 
         _where = self.__get_where_conditions(where, operators)
 
@@ -264,8 +265,7 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
         _where = ''
 
         if self.model is None:
-            # TODO: luego tendre que lanzar mi propia excepción custom
-            raise Exception('Property model not implemented')
+            raise NotImplementedError('Property model not implemented')
 
         if isinstance(set_fields, str):
             _set = set_fields

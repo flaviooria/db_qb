@@ -21,6 +21,7 @@ def create_tables(models: List[Type]):
                     logger.warning(f'{_cls.__name__} class is not a table')
             except TypeError as te:
                 logger.error(te)
+                raise
 
     if len(tables) > 0:
         print_tables = [f'{cls.__name__} class has been added as table name: {cls.__tablename__}' for cls in tables]
