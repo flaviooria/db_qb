@@ -19,8 +19,6 @@ MotorString = Annotated[
 
 
 class Settings(BaseSettings):
-    AUTH_KEY: str = Field(..., validation_alias='MY_AUTH_KEY')
-
     # ENV VARIABLE FOR CONNECT TO DB
     DB_LOCALHOST: str = Field(default='localhost')
     DB_NAME: str
@@ -28,10 +26,10 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
     DB_PORT: int = Field(default=5432)
     DB_URI: Optional[str] = None
-    DB_SCHEME: str = Field(..., description='Driver de motor de base de datos', examples=[
-                           'psycopg2'])
+    DB_SCHEME: str = Field(..., description='Database engine driver', examples=[
+        'psycopg2'])
     DB_MOTOR: MotorString = Field(
-        ..., description='Motor de base de datos', examples=['postgres', 'myqsl', 'mariadb'])  # type ignore
+        ..., description='Database engine', examples=['postgres', 'myqsl', 'mariadb'])
 
     # ClassVar se utiliza para indicar que es un atributo privado o mejor dicho de clase
     _allowed_schemes: ClassVar[str] = ['psycopg2',
@@ -45,7 +43,7 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             if value not in cls._allowed_schemes:
                 raise ValueError(
-                    f'Driver de base de datos no se encuentra en: {str(cls._allowed_schemes)}')
+                    f'Database drive not found in: {str(cls._allowed_schemes)}')
             return value
 
     @field_validator('DB_MOTOR')
@@ -54,7 +52,7 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             if value not in cls._db_motors:
                 raise ValueError(
-                    f'Motor de base de datos no se encuentra en: {str(cls._db_motors)} ')
+                    f'Database engine not found in: {str(cls._db_motors)} ')
             return value
 
     @computed_field
