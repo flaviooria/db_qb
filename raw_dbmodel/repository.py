@@ -1,23 +1,18 @@
 import functools
-from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import (Any, Callable, Dict, List, Optional, Type, TypeAlias,
-                    TypeVar, Union)
+from typing import (Callable, Type, Optional, Union, Any, List, Dict)
 
 import pandas as pd
 import sqlalchemy.sql
 from pandas import DataFrame
 from sqlalchemy import Connection, CursorResult, text
-from sqlmodel import SQLModel, inspect
-from typing_extensions import Annotated, Generic, Literal
+from sqlmodel import inspect
+from typing_extensions import Generic
 
-from exceptions import ModeOperatorError
+from raw_dbmodel._abstracts import RepositoryAbstract
 from raw_dbmodel.database import engine as engine
-
-_T = TypeVar(name='_T', bound=SQLModel)
-TypeMode = Annotated[str, Literal['sql', 'as_pd']]
-DictOrStr: TypeAlias = Union[Dict[str, Any], str]
-ListStrOrNone: TypeAlias = Optional[List[str]]
+from raw_dbmodel.exceptions import ModeOperatorError
+from raw_dbmodel.types import _T, TypeMode, DictOrStr, ListStrOrNone
 
 
 class DotDict(dict):
@@ -40,13 +35,6 @@ class DotDict(dict):
             del self[key]
         except KeyError:
             raise AttributeError(f"'Object has no attribute '{key}'")
-
-
-class RepositoryAbstract(ABC):
-    @property
-    @abstractmethod
-    def model(self) -> Generic[_T]:
-        pass
 
 
 class RepositoryBase(Generic[_T], RepositoryAbstract):
