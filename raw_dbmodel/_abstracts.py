@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic
 
-from raw_dbmodel.types import _T
+from raw_dbmodel._types import _T
 
 
 class RepositoryAbstract(ABC):
