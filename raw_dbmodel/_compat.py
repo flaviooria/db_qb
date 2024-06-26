@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import wraps
-from typing import (Callable, Type, Optional, Union, Any, List, Dict)
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 import pandas as pd
 import sqlalchemy.sql
@@ -10,9 +10,10 @@ from sqlmodel import inspect
 from typing_extensions import Generic
 
 from raw_dbmodel._abstracts import RepositoryAbstract
-from raw_dbmodel._types import _T, TypeMode, DictOrStr, ListStrOrNone
+from raw_dbmodel._types import _T, DictOrStr, ListStrOrNone, TypeMode
 from raw_dbmodel.database import engine as engine
-from raw_dbmodel.exceptions import ModeOperatorError, ParameterTypeError, DictOrStrType, ListStrOrNoneType
+from raw_dbmodel.exceptions import (DictOrStrType, ListStrOrNoneType,
+                                    ModeOperatorError, ParameterTypeError)
 from raw_dbmodel.utils import is_dict_or_str, is_list_str_or_none
 
 
@@ -325,6 +326,14 @@ class RepositoryBase(Generic[_T], RepositoryAbstract):
                 return None
 
             model = model_found.to_dict('records')[0]
+
+            for key in model.keys():
+                try:
+                    _datetime = datetime.fromisoformat(model[key])
+                    if isinstance(_datetime, datetime):
+                        model[key] = _datetime
+                except Exception:
+                    continue
 
             return self.model(**model)
         return None
