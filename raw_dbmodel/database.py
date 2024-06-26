@@ -1,11 +1,15 @@
+from logging import getLogger
 from typing import List
 
 from sqlalchemy import Engine
 from sqlmodel import SQLModel, create_engine
 from typing_extensions import Type
 
-from raw_dbmodel.logger import logger
+from raw_dbmodel.logger import setup_logging
 from raw_dbmodel.settings import config
+
+setup_logging()
+logger = getLogger(__name__)
 
 engine: Engine = create_engine(config.uri, echo=False)
 
@@ -24,7 +28,8 @@ def create_tables(models: List[Type]):
                 raise
 
     if len(tables) > 0:
-        print_tables = [f'{cls.__name__} class has been added as table name: {cls.__tablename__}' for cls in tables]
+        print_tables = [f'{cls.__name__} class has been added as table name: [b blue]{cls.__tablename__}[/b blue]' for
+                        cls in tables]
         for msg in print_tables:
             logger.info(msg)
 
