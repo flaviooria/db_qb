@@ -347,5 +347,6 @@ pip-selfcheck.json
 .ionide
 
 pruebas/
+tests/database.sqlite
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pythonvanilla,pycharm,visualstudiocode,venv,dotenv
