@@ -1,0 +1,3 @@
+formatters:
+  fmt: "%(message)s"
+  date_fmt: "%m/%d/%Y %H:%M:%S"
