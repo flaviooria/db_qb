@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from uuid import uuid4
 
 from pydantic import computed_field
@@ -8,7 +9,7 @@ from sqlmodel import Field, SQLModel
 class UserBase(SQLModel):
     id: str = Field(default_factory=lambda: str(uuid4()), primary_key=True)
     name: str
-    email: str
+    email: Optional[str]
     date: datetime = Field(default_factory=lambda: datetime.now())
 
 
