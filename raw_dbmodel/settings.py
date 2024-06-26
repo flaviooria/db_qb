@@ -11,11 +11,12 @@ class DatabaseTypes(str, Enum):
     MYSQL = 'mysql'
     POSTGRES = 'postgres'
     MARIADB = 'mariadb'
+    SQLITE = 'sqlite'
 
 
 MotorString = Annotated[
     str, StringConstraints(strip_whitespace=True, to_lower=True,
-                           pattern=r'^[postgres|mysql|mariadb]')]
+                           pattern=r'^[postgres|mysql|mariadb|sqlite]')]
 
 
 class Settings(BaseSettings):
@@ -31,10 +32,9 @@ class Settings(BaseSettings):
     DB_MOTOR: MotorString = Field(
         ..., description='Database engine', examples=['postgres', 'myqsl', 'mariadb'])
 
-    _allowed_schemes: ClassVar[str] = ['psycopg2',
-                                       'psycopg', 'pg8000', 'asyncpg', 'psycopg2cffi']
+    _allowed_schemes: ClassVar[str] = ['psycopg2', 'mysqlclient', 'pymysql', 'mariadb', 'sqlite']
 
-    _db_motors: ClassVar[str] = ['postgres', 'myqsl', 'mariadb']
+    _db_motors: ClassVar[str] = ['postgres', 'myqsl', 'mariadb', 'sqlite']
 
     @field_validator('DB_SCHEME')
     @classmethod
@@ -68,6 +68,8 @@ class Settings(BaseSettings):
             _scheme = 'postgresql+'
         if self.DB_MOTOR == DatabaseTypes.MARIADB:
             _scheme = 'mariadb+'
+        if self.DB_MOTOR == DatabaseTypes.SQLITE:
+            return f'{self.DB_SCHEME}:///{self.DB_NAME}.sqlite'
 
         _scheme += self.DB_SCHEME
 
