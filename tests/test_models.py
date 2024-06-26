@@ -202,8 +202,9 @@ class TestUserRepository(unittest.TestCase):
             user = self.userRepository.fields("name").get_data().as_dict()
 
             assert_that(user).contains_key('email')
+            fail("should have a raise error")
         except Exception as ex:
-            assert_that(str(ex)).contains("Expected <{'name': 'test592'}> to contain key <email>, but did not")
+            assert_that(str(ex)).contains("to contain key <email>, but did not")
 
     def test_validate_if_data_contains_value_failure(self):
         try:
@@ -212,7 +213,7 @@ class TestUserRepository(unittest.TestCase):
             assert_that(user_df.to_dict('records')[0]).contains_key('name')
             fail("Should have a raise error")
         except Exception as ex:
-            assert_that(str(ex)).contains("Expected <{'email': None}> to contain key <name>, but did not.")
+            assert_that(str(ex)).contains("to contain key <name>, but did not.")
 
     def test_validate_if_user_df_is_none_failure(self):
         try:
