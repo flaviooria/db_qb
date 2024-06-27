@@ -677,6 +677,7 @@ files = [
 ]
 
 [extras]
+all-db = ["mariadb", "mysqlclient", "psycopg2", "pymysql"]
 mariadb = ["mariadb"]
 mysqlclient = ["mysqlclient"]
 psycopg2 = ["psycopg2"]
@@ -685,4 +686,4 @@ pymysql = ["pymysql"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "9843695d22eb479e3dc09fcf996d4bbf72211bccbeb01bb77b8d5ee228b1bf2f"
+content-hash = "7b224f87190251d85cc435eb275bf761c461e8ed062bf11c36aa9883c4d72d41"
